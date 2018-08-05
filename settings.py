@@ -181,3 +181,9 @@ def auth_basic(orig):
             return authenticate()
         return orig(*args, **kwargs)
     return decorated
+
+def auth_none(orig):
+    @wraps(orig)
+    def decorated(*args, **kwargs):
+            return orig(*args, **kwargs)
+    return decorated

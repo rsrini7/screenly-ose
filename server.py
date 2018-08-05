@@ -42,7 +42,7 @@ from lib.utils import download_video_from_youtube, json_dump
 from lib.utils import url_fails
 from lib.utils import validate_url
 
-from settings import auth_basic, CONFIGURABLE_SETTINGS, DEFAULTS, LISTEN, PORT, settings, ZmqPublisher
+from settings import auth_basic,auth_none, CONFIGURABLE_SETTINGS, DEFAULTS, LISTEN, PORT, settings, ZmqPublisher
 
 
 HOME = getenv('HOME', '/home/pi')
@@ -1091,9 +1091,9 @@ else:
 ################################
 
 
-@app.route('/')
+@app.route('/admin')
 @auth_basic
-def viewIndex():
+def adminIndex():
     player_name = settings['player_name']
     my_ip = get_node_ip()
     resin_uuid = getenv("RESIN_UUID", None)
@@ -1109,6 +1109,26 @@ def viewIndex():
         ws_addresses.append('wss://{}.resindevice.io/ws/'.format(resin_uuid))
 
     return template('index.html', ws_addresses=ws_addresses, player_name=player_name)
+
+
+@app.route('/')
+@auth_none
+def viewIndex():
+    player_name = settings['player_name']
+    my_ip = get_node_ip()
+    resin_uuid = getenv("RESIN_UUID", None)
+
+    ws_addresses = []
+
+    if settings['use_ssl']:
+        ws_addresses.append('wss://' + my_ip + '/ws/')
+    else:
+        ws_addresses.append('ws://' + my_ip + ':' + settings['websocket_port'])
+
+    if resin_uuid:
+        ws_addresses.append('wss://{}.resindevice.io/ws/'.format(resin_uuid))
+
+    return template('user.html', ws_addresses=ws_addresses, player_name=player_name)
 
 
 @app.route('/settings', methods=["GET", "POST"])
