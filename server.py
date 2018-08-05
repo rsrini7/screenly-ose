@@ -367,7 +367,7 @@ def api_response(view):
 
 
 class Assets(Resource):
-    method_decorators = [auth_basic]
+    method_decorators = []
 
     @swagger.doc({
         'responses': {
@@ -429,7 +429,7 @@ class Assets(Resource):
 
 
 class Asset(Resource):
-    method_decorators = [api_response, auth_basic]
+    method_decorators = [api_response]
 
     @swagger.doc({
         'parameters': [
@@ -522,7 +522,7 @@ class Asset(Resource):
 
 
 class AssetsV1_1(Resource):
-    method_decorators = [auth_basic]
+    method_decorators = []
 
     @swagger.doc({
         'responses': {
@@ -568,7 +568,7 @@ class AssetsV1_1(Resource):
 
 
 class AssetV1_1(Resource):
-    method_decorators = [api_response, auth_basic]
+    method_decorators = [api_response]
 
     @swagger.doc({
         'parameters': [
@@ -648,7 +648,7 @@ class AssetV1_1(Resource):
 
 
 class AssetsV1_2(Resource):
-    method_decorators = [auth_basic]
+    method_decorators = []
 
     @swagger.doc({
         'responses': {
@@ -700,7 +700,7 @@ class AssetsV1_2(Resource):
 
 
 class AssetV1_2(Resource):
-    method_decorators = [api_response, auth_basic]
+    method_decorators = [api_response]
 
     @swagger.doc({
         'parameters': [
@@ -794,7 +794,7 @@ class AssetV1_2(Resource):
 
 
 class FileAsset(Resource):
-    method_decorators = [api_response, auth_basic]
+    method_decorators = [api_response]
 
     @swagger.doc({
         'parameters': [
@@ -837,7 +837,7 @@ class FileAsset(Resource):
 
 
 class PlaylistOrder(Resource):
-    method_decorators = [api_response, auth_basic]
+    method_decorators = [api_response]
 
     @swagger.doc({
         'parameters': [
@@ -865,7 +865,7 @@ class PlaylistOrder(Resource):
 
 
 class Backup(Resource):
-    method_decorators = [api_response, auth_basic]
+    method_decorators = [api_response]
 
     @swagger.doc({
         'responses': {
@@ -883,7 +883,7 @@ class Backup(Resource):
 
 
 class Recover(Resource):
-    method_decorators = [api_response, auth_basic]
+    method_decorators = [api_response]
 
     @swagger.doc({
         'parameters': [
@@ -914,7 +914,7 @@ class Recover(Resource):
 
 
 class ResetWifiConfig(Resource):
-    method_decorators = [api_response, auth_basic]
+    method_decorators = [api_response]
 
     @swagger.doc({
         'responses': {
@@ -934,7 +934,7 @@ class ResetWifiConfig(Resource):
 
 
 class Info(Resource):
-    method_decorators = [api_response, auth_basic]
+    method_decorators = [api_response]
 
     def get(self):
         viewlog = None
@@ -958,7 +958,7 @@ class Info(Resource):
 
 
 class AssetsControl(Resource):
-    method_decorators = [api_response, auth_basic]
+    method_decorators = [api_response]
 
     @swagger.doc({
         'parameters': [
@@ -988,7 +988,7 @@ class AssetsControl(Resource):
 
 
 class AssetContent(Resource):
-    method_decorators = [api_response, auth_basic]
+    method_decorators = [api_response]
 
     @swagger.doc({
         'parameters': [
