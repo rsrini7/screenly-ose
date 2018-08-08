@@ -706,6 +706,7 @@ class AssetsV1_2(Resource):
                 return assets_helper.read(conn, asset['asset_id']), 201
             else:
                 createMultipleAssetsFromPresentation(asset, conn)
+                #return '',201
 
 def createMultipleAssetsFromPresentation(asset,conn):
     uri = asset['uri']
@@ -718,27 +719,30 @@ def createMultipleAssetsFromPresentation(asset,conn):
     unlink(uri)
     unlink(uri+".pdf")
 
-    new_asset = copy.deepcopy(asset)
-
+    new_assets = []
     for index,fileName in list(enumerate(glob.glob(uri+".pdf"+'*.png'))):
+        new_asset = copy.deepcopy(asset)
         new_asset['asset_id'] = uuid.uuid4().hex
-        new_asset['name'] = name+str(index)+".png"
+        new_asset['name'] = name+str(index+1)+".png"
 
         #new_asset['uri'] = fileName
 
         new_asset['uri'] = path.join(settings['assetdir'], new_asset['asset_id'])
         rename(fileName, new_asset['uri'])
 
-        assets = assets_helper.read(conn)
-        ids_of_active_assets = [x['asset_id'] for x in assets if x['is_active']]
+        new_assets.append(new_asset)
 
-        new_asset = assets_helper.create(conn, new_asset)
+    assets_helper.create_multiple(conn, new_assets)
+    assets_helper.save_ordering(conn, [asset['asset_id'] for asset in new_assets])
+    return new_assets
 
-        if new_asset['is_active']:
-            ids_of_active_assets.insert(new_asset['play_order'], new_asset['asset_id'])
-        assets_helper.save_ordering(conn, ids_of_active_assets)
+        # existing_assets = assets_helper.read(conn)
+        # ids_of_active_assets = [x['asset_id'] for x in existing_assets if x['is_active']]
+        # new_asset = assets_helper.create(conn, new_asset)
 
-    return assets_helper.read(conn, new_asset['asset_id']), 201
+        # if new_asset['is_active']:
+        #     ids_of_active_assets.insert(new_asset['play_order'], new_asset['asset_id'])
+        # assets_helper.save_ordering(conn, ids_of_active_assets)
 
 class AssetV1_2(Resource):
     method_decorators = [api_response]
@@ -862,28 +866,21 @@ class FileAsset(Resource):
 
         if guess_type(filename)[0].split('/')[0] in ['image', 'video']:
             file_path = path.join(settings['assetdir'], filename) + ".tmp"
-            if 'Content-Range' in request.headers:
-                range_str = request.headers['Content-Range']
-                start_bytes = int(range_str.split(' ')[1].split('-')[0])
-                with open(file_path, 'a') as f:
-                    f.seek(start_bytes)
-                    f.write(file_upload.read())
-            else:
-                file_upload.save(file_path)
-            return file_path
         elif guess_type(filename)[0].split('/')[1] in ['vnd.ms-powerpoint', 'vnd.oasis.opendocument.text','vnd.openxmlformats-officedocument.presentationml.presentation']:
             file_path = path.join(settings['assetpresentationdir'], filename)
-            if 'Content-Range' in request.headers:
-                range_str = request.headers['Content-Range']
-                start_bytes = int(range_str.split(' ')[1].split('-')[0])
-                with open(file_path, 'a') as f:
-                    f.seek(start_bytes)
-                    f.write(file_upload.read())
-            else:
-                file_upload.save(file_path)
-            return file_path
         else:
             raise Exception("Invalid file type.")
+
+        if 'Content-Range' in request.headers:
+            range_str = request.headers['Content-Range']
+            start_bytes = int(range_str.split(' ')[1].split('-')[0])
+            with open(file_path, 'a') as f:
+                f.seek(start_bytes)
+                f.write(file_upload.read())
+        else:
+            file_upload.save(file_path)
+        return file_path
+
 
 
 class PlaylistOrder(Resource):

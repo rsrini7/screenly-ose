@@ -365,6 +365,7 @@
                 });
                 save = model.save();
                 save.done(function(data) {
+                  window.location.reload(true);
                   model.id = data.asset_id;
                   _.extend(model.attributes, data);
                   return model.collection.add(model);

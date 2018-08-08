@@ -201,6 +201,7 @@ API.View.AddAssetView = class AddAssetView extends Backbone.View
 
             save = model.save()
             save.done (data) =>
+              window.location.reload(true);
               model.id = data.asset_id
               _.extend model.attributes, data
               model.collection.add model
