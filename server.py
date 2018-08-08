@@ -41,6 +41,8 @@ from lib.utils import get_video_duration
 from lib.utils import download_video_from_youtube, json_dump
 from lib.utils import url_fails
 from lib.utils import validate_url
+from lib.utils import extractFrames
+from lib.utils import convertToPdf
 
 from settings import auth_basic,auth_none, CONFIGURABLE_SETTINGS, DEFAULTS, LISTEN, PORT, settings, ZmqPublisher
 
@@ -326,8 +328,9 @@ def prepare_asset_v1_2(request, asset_id=None):
     if not asset_id:
         asset['asset_id'] = uuid.uuid4().hex
         if uri.startswith('/'):
-            rename(uri, path.join(settings['assetdir'], asset['asset_id']))
-            uri = path.join(settings['assetdir'], asset['asset_id'])
+            if(asset['mimetype'] != 'presentation'):
+                rename(uri, path.join(settings['assetdir'], asset['asset_id']))
+                uri = path.join(settings['assetdir'], asset['asset_id'])
 
     if 'youtube_asset' in asset['mimetype']:
         uri, asset['name'], asset['duration'] = download_video_from_youtube(uri, asset['asset_id'])
@@ -688,16 +691,50 @@ class AssetsV1_2(Resource):
         if url_fails(asset['uri']):
             raise Exception("Could not retrieve file. Check the asset URL.")
         with db.conn(settings['database']) as conn:
-            assets = assets_helper.read(conn)
-            ids_of_active_assets = [x['asset_id'] for x in assets if x['is_active']]
+            if(asset['mimetype'] != 'presentation'):
+                assets = assets_helper.read(conn)
+                ids_of_active_assets = [x['asset_id'] for x in assets if x['is_active']]
 
-            asset = assets_helper.create(conn, asset)
+                asset = assets_helper.create(conn, asset)
 
-            if asset['is_active']:
-                ids_of_active_assets.insert(asset['play_order'], asset['asset_id'])
-            assets_helper.save_ordering(conn, ids_of_active_assets)
-            return assets_helper.read(conn, asset['asset_id']), 201
+                if asset['is_active']:
+                    ids_of_active_assets.insert(asset['play_order'], asset['asset_id'])
+                assets_helper.save_ordering(conn, ids_of_active_assets)
+                return assets_helper.read(conn, asset['asset_id']), 201
+            else:
+                createMultipleAssetsFromPresentation(asset, conn)
 
+def createMultipleAssetsFromPresentation(asset,conn):
+    uri = asset['uri']
+    name = asset['name']
+    convertToPdf(name,uri)
+    #from time import sleep
+    #sleep(5)
+    extractFrames(uri,name+".pdf")
+    #sleep(5)
+    from os import unlink
+    unlink(uri)
+    unlink(uri+".pdf")
+
+    import copy,glob
+
+    new_asset = copy.deepcopy(asset)
+
+    for index,fileName in list(enumerate(glob.glob(uri+".pdf"+'*.png'))):
+        new_asset['asset_id'] = uuid.uuid4().hex
+        new_asset['name'] = name+str(index)+".png"
+        new_asset['uri'] = fileName
+
+        assets = assets_helper.read(conn)
+        ids_of_active_assets = [x['asset_id'] for x in assets if x['is_active']]
+
+        new_asset = assets_helper.create(conn, new_asset)
+
+        if new_asset['is_active']:
+            ids_of_active_assets.insert(new_asset['play_order'], new_asset['asset_id'])
+        assets_helper.save_ordering(conn, ids_of_active_assets)
+
+    return assets_helper.read(conn, new_asset['asset_id']), 201
 
 class AssetV1_2(Resource):
     method_decorators = [api_response]
@@ -819,21 +856,30 @@ class FileAsset(Resource):
         file_upload = req.files.get('file_upload')
         filename = file_upload.filename
 
-        if guess_type(filename)[0].split('/')[0] not in ['image', 'video']:
-            raise Exception("Invalid file type.")
-
-        file_path = path.join(settings['assetdir'], filename) + ".tmp"
-
-        if 'Content-Range' in request.headers:
-            range_str = request.headers['Content-Range']
-            start_bytes = int(range_str.split(' ')[1].split('-')[0])
-            with open(file_path, 'a') as f:
-                f.seek(start_bytes)
-                f.write(file_upload.read())
+        if guess_type(filename)[0].split('/')[0] in ['image', 'video']:
+            file_path = path.join(settings['assetdir'], filename) + ".tmp"
+            if 'Content-Range' in request.headers:
+                range_str = request.headers['Content-Range']
+                start_bytes = int(range_str.split(' ')[1].split('-')[0])
+                with open(file_path, 'a') as f:
+                    f.seek(start_bytes)
+                    f.write(file_upload.read())
+            else:
+                file_upload.save(file_path)
+            return file_path
+        elif guess_type(filename)[0].split('/')[1] in ['vnd.ms-powerpoint', 'vnd.oasis.opendocument.text','vnd.openxmlformats-officedocument.presentationml.presentation']:
+            file_path = path.join(settings['assetpresentationdir'], filename)
+            if 'Content-Range' in request.headers:
+                range_str = request.headers['Content-Range']
+                start_bytes = int(range_str.split(' ')[1].split('-')[0])
+                with open(file_path, 'a') as f:
+                    f.seek(start_bytes)
+                    f.write(file_upload.read())
+            else:
+                file_upload.save(file_path)
+            return file_path
         else:
-            file_upload.save(file_path)
-
-        return file_path
+            raise Exception("Invalid file type.")
 
 
 class PlaylistOrder(Resource):

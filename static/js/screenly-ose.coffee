@@ -36,7 +36,8 @@ get_template = (name) -> _.template ($ "##{name}-template").html()
 delay = (wait, fn) -> _.delay fn, wait
 
 mimetypes = [ [('jpg jpeg png pnm gif bmp'.split ' '), 'image']
-              [('avi mkv mov mpg mpeg mp4 ts flv'.split ' '), 'video']]
+              [('avi mkv mov mpg mpeg mp4 ts flv'.split ' '), 'video']
+              [('ppt pptx odt'.split ' '), 'presentation']]
 viduris   = ('rtsp rtmp'.split ' ')
 domains = [ [('www.youtube.com youtu.be'.split ' '), 'youtube_asset']]
 
@@ -412,6 +413,7 @@ API.View.AssetRowView = class AssetRowView extends Backbone.View
       when "streaming" then "fas fa-video"
       when "image"     then "far fa-image"
       when "webpage"   then "fas fa-globe-americas"
+      when "presentation" then "fab fa-slideshare"
       else ""
 
     if (@model.get "is_processing") == 1

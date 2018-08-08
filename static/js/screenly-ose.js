@@ -64,7 +64,7 @@
     return _.delay(fn, wait);
   };
 
-  mimetypes = [['jpg jpeg png pnm gif bmp'.split(' '), 'image'], ['avi mkv mov mpg mpeg mp4 ts flv'.split(' '), 'video']];
+  mimetypes = [['jpg jpeg png pnm gif bmp'.split(' '), 'image'], ['avi mkv mov mpg mpeg mp4 ts flv'.split(' '), 'video'], ['ppt pptx odt'.split(' '), 'presentation']];
 
   viduris = 'rtsp rtmp'.split(' ');
 
@@ -764,6 +764,8 @@
             return "far fa-image";
           case "webpage":
             return "fas fa-globe-americas";
+          case "presentation":
+            return "fab fa-slideshare";
           default:
             return "";
         }
@@ -1034,3 +1036,5 @@
   })(Backbone.View);
 
 }).call(this);
+
+//# sourceMappingURL=screenly-ose.js.map

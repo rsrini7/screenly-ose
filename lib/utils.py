@@ -217,3 +217,19 @@ def template_handle_unicode(value):
     if isinstance(value, str):
         return value.decode('utf-8')
     return unicode(value)
+
+
+def extractFrames(presentationFile,pdfFile):
+    call(["/usr/bin/convert",presentationFile+".pdf",pdfFile+"_%03d"+".png"])
+
+
+def convertToPdf(assetName,presentationFile):
+        call(["/usr/bin/unoconv","-vvv",
+                "--doctype=presentation",
+                "--format=pdf",
+                "-e PublishMode=0",
+                "-e Format=2",
+                "-e Width=1024",
+                "-e Compression=\"50%\"",
+                "-e IsExportContentsPage=true",
+                "--output=../screenly_presentation_assets/"+assetName+".pdf",presentationFile])

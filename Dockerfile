@@ -17,6 +17,8 @@ RUN apt-get update && \
         python-netifaces \
         python-simplejson \
         sqlite3 \
+        unoconv \
+        imagemagick \
     && \
     apt-get clean
 
@@ -29,7 +31,7 @@ RUN curl -s https://bootstrap.pypa.io/get-pip.py | python && \
 RUN useradd pi
 
 # Install config file and file structure
-RUN mkdir -p /home/pi/.screenly /home/pi/screenly /home/pi/screenly_assets
+RUN mkdir -p /home/pi/.screenly /home/pi/screenly /home/pi/screenly_assets  /home/pi/screenly_presentation_assets
 COPY ansible/roles/screenly/files/screenly.conf /home/pi/.screenly/screenly.conf
 
 # Copy in code base
@@ -42,3 +44,4 @@ WORKDIR /home/pi/screenly
 EXPOSE 8080
 
 CMD python server.py
+
