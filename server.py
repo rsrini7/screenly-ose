@@ -30,6 +30,9 @@ from flask_swagger_ui import get_swaggerui_blueprint
 from gunicorn.app.base import Application
 from werkzeug.wrappers import Request
 
+from os import unlink
+import copy, glob
+
 from lib import assets_helper
 from lib import backup_helper
 from lib import db
@@ -707,23 +710,24 @@ class AssetsV1_2(Resource):
 def createMultipleAssetsFromPresentation(asset,conn):
     uri = asset['uri']
     name = asset['name']
+
     convertToPdf(name,uri)
-    #from time import sleep
-    #sleep(5)
+
     extractFrames(uri,name+".pdf")
-    #sleep(5)
-    from os import unlink
+
     unlink(uri)
     unlink(uri+".pdf")
-
-    import copy,glob
 
     new_asset = copy.deepcopy(asset)
 
     for index,fileName in list(enumerate(glob.glob(uri+".pdf"+'*.png'))):
         new_asset['asset_id'] = uuid.uuid4().hex
         new_asset['name'] = name+str(index)+".png"
-        new_asset['uri'] = fileName
+
+        #new_asset['uri'] = fileName
+
+        new_asset['uri'] = path.join(settings['assetdir'], new_asset['asset_id'])
+        rename(fileName, new_asset['uri'])
 
         assets = assets_helper.read(conn)
         ids_of_active_assets = [x['asset_id'] for x in assets if x['is_active']]

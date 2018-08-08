@@ -220,7 +220,7 @@ def template_handle_unicode(value):
 
 
 def extractFrames(presentationFile,pdfFile):
-    call(["/usr/bin/convert",presentationFile+".pdf",pdfFile+"_%03d"+".png"])
+    call(["/usr/bin/convert",presentationFile+".pdf",presentationFile+".pdf_%03d"+".png"])
 
 
 def convertToPdf(assetName,presentationFile):
