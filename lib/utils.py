@@ -219,9 +219,8 @@ def template_handle_unicode(value):
     return unicode(value)
 
 
-def extractFrames(presentationFile,pdfFile):
-    call(["/usr/bin/convert",presentationFile+".pdf",presentationFile+".pdf_%03d"+".png"])
-
+def extractFrames(pdfFile):
+    call(["/usr/bin/convert",pdfFile,pdfFile+"_%03d"+".png"])
 
 def convertToPdf(assetName,presentationFile):
         call(["/usr/bin/unoconv","-vvv",

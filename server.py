@@ -694,7 +694,10 @@ class AssetsV1_2(Resource):
         if url_fails(asset['uri']):
             raise Exception("Could not retrieve file. Check the asset URL.")
         with db.conn(settings['database']) as conn:
-            if(asset['mimetype'] != 'presentation'):
+            if(asset['mimetype'] == 'presentation' or asset['mimetype'] == 'pdf'):
+                createMultipleAssetsFromPresentationOrPdf(asset, conn)
+                #return assets_helper.read(conn, asset['asset_id']),201
+            else:
                 assets = assets_helper.read(conn)
                 ids_of_active_assets = [x['asset_id'] for x in assets if x['is_active']]
 
@@ -704,23 +707,24 @@ class AssetsV1_2(Resource):
                     ids_of_active_assets.insert(asset['play_order'], asset['asset_id'])
                 assets_helper.save_ordering(conn, ids_of_active_assets)
                 return assets_helper.read(conn, asset['asset_id']), 201
-            else:
-                createMultipleAssetsFromPresentation(asset, conn)
-                #return '',201
 
-def createMultipleAssetsFromPresentation(asset,conn):
+def createMultipleAssetsFromPresentationOrPdf(asset,conn):
     uri = asset['uri']
     name = asset['name']
+    uri_new = uri
 
-    convertToPdf(name,uri)
-
-    extractFrames(uri,name+".pdf")
+    if(asset['mimetype'] == 'presentation'):
+        convertToPdf(name,uri)
+        extractFrames(uri+".pdf")
+        unlink(uri+".pdf")
+        uri_new = uri_new + ".pdf"
+    else:
+        extractFrames(uri)
 
     unlink(uri)
-    unlink(uri+".pdf")
 
     new_assets = []
-    for index,fileName in list(enumerate(glob.glob(uri+".pdf"+'*.png'))):
+    for index,fileName in list(enumerate(glob.glob(uri_new+'*.png'))):
         new_asset = copy.deepcopy(asset)
         new_asset['asset_id'] = uuid.uuid4().hex
         new_asset['name'] = name+str(index+1)+".png"
@@ -733,7 +737,7 @@ def createMultipleAssetsFromPresentation(asset,conn):
         new_assets.append(new_asset)
 
     assets_helper.create_multiple(conn, new_assets)
-    assets_helper.save_ordering(conn, [asset['asset_id'] for asset in new_assets])
+    #assets_helper.save_ordering(conn, [asset['asset_id'] for asset in new_assets])
     return new_assets
 
         # existing_assets = assets_helper.read(conn)
@@ -863,10 +867,10 @@ class FileAsset(Resource):
         req = Request(request.environ)
         file_upload = req.files.get('file_upload')
         filename = file_upload.filename
-
+        print(guess_type(filename)[0])
         if guess_type(filename)[0].split('/')[0] in ['image', 'video']:
             file_path = path.join(settings['assetdir'], filename) + ".tmp"
-        elif guess_type(filename)[0].split('/')[1] in ['vnd.ms-powerpoint', 'vnd.oasis.opendocument.text','vnd.openxmlformats-officedocument.presentationml.presentation']:
+        elif guess_type(filename)[0].split('/')[1] in ['vnd.ms-powerpoint', 'vnd.oasis.opendocument.text','vnd.openxmlformats-officedocument.presentationml.presentation','vnd.oasis.opendocument.presentation','pdf']:
             file_path = path.join(settings['assetpresentationdir'], filename)
         else:
             raise Exception("Invalid file type.")

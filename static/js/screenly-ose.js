@@ -64,7 +64,7 @@
     return _.delay(fn, wait);
   };
 
-  mimetypes = [['jpg jpeg png pnm gif bmp'.split(' '), 'image'], ['avi mkv mov mpg mpeg mp4 ts flv'.split(' '), 'video'], ['ppt pptx odt'.split(' '), 'presentation']];
+  mimetypes = [['jpg jpeg png pnm gif bmp'.split(' '), 'image'], ['avi mkv mov mpg mpeg mp4 ts flv'.split(' '), 'video'], ['ppt pptx odp odt'.split(' '), 'presentation'], ['pdf '.split(' '), 'pdf']];
 
   viduris = 'rtsp rtmp'.split(' ');
 
@@ -365,10 +365,13 @@
                 });
                 save = model.save();
                 save.done(function(data) {
-                  window.location.reload(true);
-                  model.id = data.asset_id;
-                  _.extend(model.attributes, data);
-                  return model.collection.add(model);
+                  if (data === null) {
+                    return window.location.reload(true);
+                  } else {
+                    model.id = data.asset_id;
+                    _.extend(model.attributes, data);
+                    return model.collection.add(model);
+                  }
                 });
                 return save.fail(function() {
                   return model.destroy();
@@ -767,6 +770,8 @@
             return "fas fa-globe-americas";
           case "presentation":
             return "fab fa-slideshare";
+          case "pdf":
+            return "far fa-file-pdf";
           default:
             return "";
         }

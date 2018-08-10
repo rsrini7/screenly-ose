@@ -37,7 +37,8 @@ delay = (wait, fn) -> _.delay fn, wait
 
 mimetypes = [ [('jpg jpeg png pnm gif bmp'.split ' '), 'image']
               [('avi mkv mov mpg mpeg mp4 ts flv'.split ' '), 'video']
-              [('ppt pptx odt'.split ' '), 'presentation']]
+              [('ppt pptx odp odt'.split ' '), 'presentation']
+              [('pdf '.split ' '), 'pdf']]
 viduris   = ('rtsp rtmp'.split ' ')
 domains = [ [('www.youtube.com youtu.be'.split ' '), 'youtube_asset']]
 
@@ -201,10 +202,13 @@ API.View.AddAssetView = class AddAssetView extends Backbone.View
 
             save = model.save()
             save.done (data) =>
-              window.location.reload(true);
-              model.id = data.asset_id
-              _.extend model.attributes, data
-              model.collection.add model
+
+                if data is null
+                  window.location.reload(true);
+                else
+                  model.id = data.asset_id
+                  _.extend model.attributes, data
+                  model.collection.add model
             save.fail =>
               model.destroy()
           .error =>
@@ -415,6 +419,7 @@ API.View.AssetRowView = class AssetRowView extends Backbone.View
       when "image"     then "far fa-image"
       when "webpage"   then "fas fa-globe-americas"
       when "presentation" then "fab fa-slideshare"
+      when "pdf" then "far fa-file-pdf"
       else ""
 
     if (@model.get "is_processing") == 1
