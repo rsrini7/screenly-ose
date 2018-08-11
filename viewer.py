@@ -31,7 +31,7 @@ __copyright__ = "Copyright 2012-2017, Screenly, Inc"
 __license__ = "Dual License: GPLv2 and Commercial License"
 
 
-SPLASH_DELAY = 60  # secs
+SPLASH_DELAY = 45  # secs
 EMPTY_PL_DELAY = 5  # secs
 
 INITIALIZED_FILE = '/.screenly/initialized'
@@ -390,7 +390,7 @@ def asset_loop(scheduler):
         logging.debug('Asset URI %s', uri)
         watchdog()
 
-        if 'image' in mime:
+        if 'image' in mime or 'presentation' in mime or 'pdf' in mime:
             view_image(uri)
         elif 'web' in mime:
             # FIXME If we want to force periodic reloads of repeated web assets, force=True could be used here.
@@ -401,7 +401,7 @@ def asset_loop(scheduler):
         else:
             logging.error('Unknown MimeType %s', mime)
 
-        if 'image' in mime or 'web' in mime:
+        if 'image' in mime or 'web' in mime or 'presentation' in mime or 'pdf' in mime:
             duration = int(asset['duration'])
             logging.info('Sleeping for %s', duration)
             sleep(duration)

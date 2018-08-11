@@ -315,8 +315,11 @@
                 Add Asset
               </a>
             </div>
-            Add Assets
+            Schedule Overview
           </h1>
+          {% if context.player_name %}
+            <h2>{{context.player_name}}</h2>
+          {% endif %}
         </div>
       </div>
 
