@@ -331,7 +331,7 @@ def prepare_asset_v1_2(request, asset_id=None):
     if not asset_id:
         asset['asset_id'] = uuid.uuid4().hex
         if uri.startswith('/'):
-            if(asset['mimetype'] != 'presentation'):
+            if(asset['mimetype'] != 'presentation' and asset['mimetype'] != 'pdf'):
                 rename(uri, path.join(settings['assetdir'], asset['asset_id']))
                 uri = path.join(settings['assetdir'], asset['asset_id'])
 
