@@ -53,7 +53,7 @@ else
     echo -e "\n\nIt looks like NetworkManager is not installed. Please install it by running 'sudo apt install -y network-manager' and then re-run the installation."
     exit 1
   fi
-
+  
   export MANAGE_NETWORK=true
 fi
 
@@ -91,7 +91,7 @@ curl -s https://bootstrap.pypa.io/get-pip.py | sudo python
 
 sudo pip install ansible==2.5.3
 
-ansible localhost -m git -a "repo=${1:-https://github.com/rsrini7/screenly-ose.git} dest=/home/pi/screenly version=$BRANCH"
+ansible localhost -m git -a "repo=${1:-https://github.com/screenly/screenly-ose.git} dest=/home/pi/screenly version=$BRANCH"
 cd /home/pi/screenly/ansible
 
 ansible-playbook site.yml $EXTRA_ARGS
