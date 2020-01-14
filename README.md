@@ -1,58 +1,37 @@
-[![Build Status](https://travis-ci.org/Screenly/screenly-ose.svg?branch=master)](https://travis-ci.org/Screenly/screenly-ose)
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/5905ebcf4aab4220ad9fdf3fb679c49d)](https://www.codacy.com/app/vpetersson/screenly-ose?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=Screenly/screenly-ose&amp;utm_campaign=Badge_Grade)
-
-# Screenly OSE - Digital Signage for the Raspberry Pi
-
-## Disk images
-
-The recommended installation method is to grab the latest disk image from [here](https://github.com/Screenly/screenly-ose/releases).
-
-## Installing on Raspbian
-
-The tl;dr for installing Screenly OSE on [Raspbian Lite](https://www.raspberrypi.org/downloads/raspbian/) is:
+## Dockerized Development Environment - Windows VirtualBox + Boot2Docker
 
 ```
-$ bash <(curl -sL https://www.screenly.io/install-ose.sh)
-```
+$ docker build -t signage/server -f Dockerfile.server .
+$ docker build -t signage/websocket -f Dockerfile.websocket_server .
+$ docker build -t signage/viewer -f Dockerfile.viewer .
+	
+$ docker run --rm -ti --name=digital-signage-server -e 'LISTEN=0.0.0.0' -p 8080:8080  signage/server
+$ docker run --rm -ti --name=digital-signage-websocket -e 'LISTEN=0.0.0.0' -p 9999:9999  signage/websocket
+$ docker run --rm -ti --name=digital-signage-viewer -e DISPLAY=192.168.1.9:0.0 -e 'LISTEN=192.168.1.9' signage/viewer
 
-**This installation will take 15 minutes to several hours**, depending on variables such as:
+$ docker run --name=digital-signage-server -e 'LISTEN=0.0.0.0' -p 8080:8080 signage/server
+$ docker logs --tail 100 digital-signage-server
 
- * The Raspberry Pi hardware version
- * The SD card
- * The internet connection
 
-During ideal conditions (Raspberry Pi 3 Model B+, class 10 SD card and fast internet connection), the installation normally takes 15-30 minutes. On a Raspberry Pi Zero or Raspberry Pi Model B with a class 4 SD card, the installation will take hours. As such, it is usually a lot faster to use the provided disk images.
+$ docker run --name=digital-signage-websocket -e 'LISTEN=0.0.0.0' -p 9999:9999 signage/websocket
+$ docker logs --tail 100 digital-signage-websocket
 
-To learn more about Screenly, please visit the official website at [Screenly.io](http://www.screenly.io).
 
-[![An introduction to digital signage with Screenly OSE](http://img.youtube.com/vi/FQte5yP0azE/0.jpg)](http://www.youtube.com/watch?v=FQte5yP0azE)
+$ docker run --name=digital-signage-viewer -e DISPLAY=192.168.1.9:0.0 -e 'LISTEN=192.168.1.9'  signage/viewer
+$ docker logs --tail 100 digital-signage-viewer
 
-Quick links:
 
- * [FAQ](https://support.screenly.io/hc/en-us/sections/202652366-Frequently-Asked-Questions-FAQ-)
- * [Support Forum](https://support.screenly.io)
- * [Screenly OSE Home](https://www.screenly.io/ose/)
- * [Live Demo](http://ose.demo.screenlyapp.com/)
- * [QA Checklist](https://www.forgett.com/checklist/1789089623)
- * [API Docs](http://ose.demo.screenlyapp.com/api/docs/)
+$ docker exec -it <container name> /bin/bash
+$ docker rm -f $(docker ps -aq)
+$ docker rmi <image>
 
-Screenly OSE works on all Raspberry Pi versions, including Raspberry Pi Zero and Raspberry Pi 3 Model B.
-
-## Dockerized Development Environment
-
-To simplify development of the server module of Screenly OSE, we've created a Docker container. This is intended to run on your local machine with the Screenly OSE repository mounted as a volume.
-
-Assuming you're in the source code repository, simply run:
 
 ```
-$ docker run --rm -ti \
-    --name=screenly-dev \
-    -e 'LISTEN=0.0.0.0' \
-    -p 8080:8080 \
-    -v $(pwd):/home/pi/screenly \
-    screenly/ose-dev-server
-```
+#### Notes
 
-## Running the Unit Tests
+* In VirtualBox - do port-mapping for below ports 8080 and 9999 with host as 0.0.0.0 (all network interfaces)
 
-    nosetests --with-doctest
+* Separate docker for viewer having issue with DB, since viewer is trying to use the same db which was created by server.     OperationalError: no such table: assets
+
+    - Solution : Single Dockerfile with all 3 components would work :)
+

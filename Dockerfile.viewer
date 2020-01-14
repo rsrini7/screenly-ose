@@ -1,0 +1,81 @@
+FROM ubuntu:16.04
+MAINTAINER RSrini <7rsrini@gmail.com>
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV DISPLAY=":0"
+
+RUN apt-get update && \
+    apt-get -y install \
+        build-essential \
+        curl \
+        git-core \
+        ffmpeg \
+        gstreamer0.10-plugins-good \
+        libdbus-glib-1-dev \
+        libffi-dev \
+        libwebkit-dev \
+        libssl-dev \
+        net-tools \
+        procps \        
+        mplayer \
+        matchbox \
+        psmisc \
+        python-dev \
+        python-netifaces \
+        python-simplejson \
+        python-pil \
+        python-pip \
+        python-setuptools \
+        uzbl \
+        python-gtk2-dev \
+        x11-xserver-utils \
+        xserver-xorg \
+        sqlite3 \
+    && \
+    apt-get clean
+
+RUN pip install --upgrade pip
+
+# Install Python requirements
+ADD requirements.common.txt /tmp/requirements.common.txt
+ADD requirements.viewer.txt /tmp/requirements.viewer.txt
+RUN pip install -r /tmp/requirements.common.txt
+RUN pip install -r /tmp/requirements.viewer.txt
+
+# X11
+COPY ansible/roles/screenly/files/X.service /etc/systemd/system/X.service
+
+# Matchbox
+COPY ansible/roles/screenly/files/matchbox.service /etc/systemd/system/matchbox.service
+
+# Viewer
+COPY ansible/roles/screenly/files/screenly-viewer.service /etc/systemd/system/screenly-viewer.service
+RUN sed -i '/\[Service\]/ a\Environment=HOME=/data' /etc/systemd/system/screenly-viewer.service
+RUN sed -i '/\[Service\]/ a\Environment=DISABLE_UPDATE_CHECK=True' /etc/systemd/system/screenly-viewer.service
+
+# Enable container init system.
+ENV INITSYSTEM on
+
+# Create runtime user
+RUN    useradd pi -d /home/pi \
+    && /usr/sbin/usermod -a -G video pi
+
+# Install config file and file structure
+RUN mkdir -p /home/pi/screenly
+COPY ansible/roles/screenly/files/gtkrc-2.0 /home/pi/.gtkrc-2.0
+
+# Install config file and file structure
+RUN mkdir -p /home/pi/.screenly /home/pi/screenly /home/pi/screenly_assets  /home/pi/screenly_presentation_assets
+COPY ansible/roles/screenly/files/screenly.conf /home/pi/.screenly/screenly.conf
+COPY ansible/roles/screenly/files/uzbl-config /home/pi/.config/uzbl/config-screenly
+
+# Copy in code base
+COPY . /home/pi/screenly
+RUN chown -R pi:pi /home/pi
+
+USER pi
+
+WORKDIR /home/pi/screenly
+
+#CMD python viewer.py
+CMD ["bash"]

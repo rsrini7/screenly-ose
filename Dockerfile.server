@@ -1,0 +1,53 @@
+FROM debian:stretch
+MAINTAINER RSrini <7rsrini@gmail.com>
+
+RUN apt-get update && \
+    apt-get -y install \
+        build-essential \
+        curl \
+        ffmpeg \        
+        git-core \
+        libffi-dev \
+        libssl-dev \
+        net-tools \
+        procps \        
+        mplayer \
+        python-dev \
+        python-netifaces \
+        python-simplejson \
+        python-pil \
+        python-pip \
+        python-setuptools \
+        sqlite3 \
+        unoconv \
+        imagemagick \
+    && \                
+    apt-get clean
+
+RUN pip install --upgrade pip
+
+# Install Python requirements
+ADD requirements.common.txt /tmp/requirements.common.txt
+ADD requirements.server.txt /tmp/requirements.server.txt
+RUN pip install -r /tmp/requirements.common.txt
+RUN pip install -r /tmp/requirements.server.txt
+
+# Create runtime user
+RUN  useradd pi -d /home/pi \
+    && /usr/sbin/usermod -a -G video pi
+
+# Install config file and file structure
+RUN mkdir -p /home/pi/.screenly /home/pi/screenly /home/pi/screenly_assets  /home/pi/screenly_presentation_assets
+COPY ansible/roles/screenly/files/screenly.conf /home/pi/.screenly/screenly.conf
+
+# Copy in code base
+COPY . /home/pi/screenly
+RUN chown -R pi:pi /home/pi
+
+USER pi
+
+WORKDIR /home/pi/screenly
+
+EXPOSE 8080
+
+CMD python server.py
